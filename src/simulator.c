@@ -32,7 +32,7 @@ void lru_rep(long int address);
 void fifo_rep(long int address);
 void random_rep(long int address);
 void accessed(long int address);
-void free_all(void);
+void free_all(char algorithm);
 
 int main(int argc, char** argv){
   /*Args: number of sets, number of blocks per set, number of bytes per block, replacement algorithm*/
@@ -135,6 +135,8 @@ int main(int argc, char** argv){
 	accessed(address);                    /*call the function to update the usage of the lines*/
       }
       break;
+    case 'S':
+      continue;
     default:
       assert(0);
     }
@@ -143,21 +145,31 @@ int main(int argc, char** argv){
   fclose(fp);
   printf("Load hits: %d\n", l_hits);
   printf("Load misses: %d\n", l_misses);
-  free_all();
+  free_all(algorithm);
   return 1;
 }
 
-void free_all(void){
+void free_all(char algorithm){
   int i, j;
   struct cache_line *temp, *next;
+  switch(algorithm){
+  case 0:                          /*lru*/
   /*free lru array*/
-  for(i=0; i<memory.number_of_sets; i++)
-    free(lru_array[i]);
-  free(lru_array);
-  /*free fifo array*/
-  free(fifo_array);
-  /*free accesses array*/
-  free(accesses);
+    for(i=0; i<memory.number_of_sets; i++)
+      free(lru_array[i]);
+    free(lru_array);
+    /*free accesses array*/
+    free(accesses);
+    break;
+  case 1:                         /*fifo*/
+    /*free fifo array*/
+    free(fifo_array);
+    break;
+  case 2:                         /*random. No operation*/
+    break;
+  default:
+    assert(0);
+  }
   /*free sets*/
   for(i=0; i<memory.number_of_sets; i++){
     temp=memory.sets[i];
