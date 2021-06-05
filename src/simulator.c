@@ -98,7 +98,9 @@ int main(int argc, char** argv){
    algorithm=1;
     fifo_array=(int*)malloc(number_of_sets*sizeof(int));
     assert(fifo_array!=NULL);
-    memset(fifo_array, 0, number_of_sets);
+    for(i=0; i<number_of_sets; i++)    /*initialize with zeros*/
+      fifo_array[i]=0;
+    
   }else if(!strcmp(argv[4], "random")){
     algorithm=2;
   }else{
