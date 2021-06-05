@@ -7,8 +7,8 @@
 struct cache_line{  /*it represents a line of a set in the cache memory*/
   short valid_bit;  /*the valid bit*/
   long int tag;          /*the address tag*/
-  char* block;      /*the block. char type. allocates space <number of bytes in block>*/
-  struct cache_line* next; /*the next line of the set*/
+  char *block;      /*the block. char type. allocates space <number of bytes in block>*/
+  struct cache_line *next; /*the next line of the set*/
 };
 
 struct cache_memory{         /*it represents the whole cache memory.*/
@@ -32,8 +32,7 @@ void lru_rep(long int address);
 void fifo_rep(long int address);
 void random_rep(long int address);
 void accessed(long int address);
-void store_last(int set, int position);
-int contains(int set, int position);
+void free_all(void);
 
 int main(int argc, char** argv){
   /*Args: number of sets, number of blocks per set, number of bytes per block, replacement algorithm*/
@@ -48,7 +47,6 @@ int main(int argc, char** argv){
   char str[15];
   long int address;
   int l_hits=0, l_misses=0;
-  int s_hits=0, s_misses=0;
   int i, j;
   FILE *fp;
   char f_name[100];
@@ -114,12 +112,11 @@ int main(int argc, char** argv){
     algorithm=2;                            /*if there are no more than 1 blocks per set use random algorithm. It is useless
 					      but we do it for simplicity*/
   allocate_the_cache(number_of_sets, number_of_blocks, number_of_bytes);  /*allocate the space needed for the memory and initialize it*/
-  struct cache_line *temp;
   while(fgets(str, 15, fp)){             /*read a line of the file*/
     printf("\n\n");
     address=strtol(&str[2], NULL, 16);   /*convert the address to decimal*/
     instruction=str[0];                  /*store the instruction before the address (S or L)*/
-    printf("address given: %s \n", &str[2]);
+    printf("address given: %s", &str[2]);
     switch(instruction){
     case 'L':
       if(!load_address(address)){
@@ -146,14 +143,39 @@ int main(int argc, char** argv){
   fclose(fp);
   printf("Load hits: %d\n", l_hits);
   printf("Load misses: %d\n", l_misses);
+  free_all();
   return 1;
+}
+
+void free_all(void){
+  int i, j;
+  struct cache_line *temp, *next;
+  /*free lru array*/
+  for(i=0; i<memory.number_of_sets; i++)
+    free(lru_array[i]);
+  free(lru_array);
+  /*free fifo array*/
+  free(fifo_array);
+  /*free accesses array*/
+  free(accesses);
+  /*free sets*/
+  for(i=0; i<memory.number_of_sets; i++){
+    temp=memory.sets[i];
+    for(j=0; j<memory.number_of_blocks; j++){
+      next=temp->next;
+      free(temp->block);
+      free(temp);
+      temp=next;
+    }
+  }
+  free(memory.sets);
+  return;
 }
 
 void accessed(long int address){
   int set=address%memory.number_of_sets;    /*find the set where the line is located*/
   long int tag=address/memory.number_of_sets;    /*find the tag*/
-  int i, position, x;
-  char found=0;
+  int i, position;
   struct cache_line *temp;
   temp=memory.sets[set];
   for(i=0; i<memory.number_of_blocks; i++){   /*find the position of the accessed line*/
@@ -167,18 +189,9 @@ void accessed(long int address){
   return;
 }
 
-/*returns the index of located position if the position exists in the lru array, or -1 if not*/
-int contains(int set, int position){
-  int i;
-  for(i=0; i<memory.number_of_blocks; i++)
-    if(lru_array[set][i]==position)
-      return i;
-  return -1;
-}
-
 /*takes an address and stores in the cache. returns 1 on hit and 0 on miss*/
 int store_address(long address){
-
+  return 0;
 }
 
 /*takes an address and searches it in the cache. If it finds it returns 1 else returns 0*/
@@ -198,6 +211,8 @@ void lru_rep(long int address){
   int set=address%memory.number_of_sets;         /*find the set where the line is located*/
   long int tag=address/memory.number_of_sets;    /*find the tag*/
   int i;
+  int min;
+  int index_of_min;
   struct cache_line *temp=memory.sets[set];
   /*check if there are invalid lines in cache to write on them*/
   for(i=0; i<memory.number_of_blocks; i++){
@@ -210,8 +225,6 @@ void lru_rep(long int address){
   }
   /*if you are here there was not empty cache line on this set. you have to overwrite one...*/
   /*You will overwrite according to the lru array. The index with the less number is the least recent used block*/
-  int min;
-  int index_of_min;
   min=lru_array[set][0];
   index_of_min=0;
   for(i=1; i<memory.number_of_blocks; i++){
@@ -250,7 +263,6 @@ void random_rep(long int address){
   int set=address%memory.number_of_sets;              /*find the set*/
   long int tag=address/memory.number_of_sets;         /*find the tag*/
   struct cache_line *temp=memory.sets[set];
-  printf("\n\nRAND IS %d\n\n", random_block);
   for(i=0; i<random_block; i++)
     temp=temp->next;
   temp->tag=tag;                                      /*replace the old tag with this.tag*/
@@ -262,6 +274,7 @@ void random_rep(long int address){
 void allocate_the_cache(int sets, int blocks, int bytes){
   int i;
   int j;
+  struct cache_line *new_line;
   memory.number_of_sets=sets;
   memory.number_of_blocks=blocks;
   
@@ -269,8 +282,6 @@ void allocate_the_cache(int sets, int blocks, int bytes){
   assert(memory.sets!=NULL);
   for(i=0; i<memory.number_of_sets; i++)
     memory.sets[i]=NULL;                                                       /*initialize with NULL*/
-
-  struct cache_line *new_line;
   
   for(i=0; i<memory.number_of_sets; i++){
     for(j=0; j<memory.number_of_blocks; j++){

@@ -54,11 +54,12 @@ int main(){
     if(x){                                                        /*write a random address from the buffer*/
       if(buffer_token>0){                                         /*you have accesses in the buffer so do it*/
 	index=rand()%offset;
-	if(option=='B')
+	if(option=='B'){
 	  if(rand()%2)
 	    rep_addresses[index][0]='L';
 	  else
 	    rep_addresses[index][0]='S';
+	}
 	fprintf(fp, "%s", rep_addresses[index]);
 	buffer_token--;                                           /*but now you have an access less*/
       }else
