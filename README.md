@@ -1,7 +1,7 @@
 # cache_simulator
 This is a cache memory simulator. simulator.c contains the code for the simulator.
 Language: C
-Usage as: ./a.out <number_of_sets> <number_of_blocks_per_set> <bytes per block> <replace algorithm>
+Usage as: ./a.out "number_of_sets" "number_of_blocks_per_set> "bytes per block" <replace algorithm>
 The number of sets must be a power of 2
 The number of blocks must be a power of 2
 the number of bytes per block must be a power of 2 and number_of_bytes_per_block >= 4
