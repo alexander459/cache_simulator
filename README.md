@@ -14,4 +14,4 @@ The user can chose the buffer's size and the total accesses to that buffer. Smal
 between some addresses. The usage of the ganerator is of course optional. Same and better results can be achived writting the addresses in a
 txt file by hand; Just to save time and to test my skills ;)
 
-!NOTE: The program does not support S commands yet. When it reads S 0x<address> it just skips the line and continues to the next address
+!NOTE: The program does not support S commands yet. When it reads `S 0x<address>` it just skips the line and continues to the next address
